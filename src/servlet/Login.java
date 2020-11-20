@@ -28,14 +28,14 @@ public class Login extends HttpServlet {
 		if ("2".equals(eBtn)) {
 			response.sendRedirect("/register.jsp");
 
-		// イベントボタンが"1"の場合、ログイン処理を実施する
+			// イベントボタンが"1"の場合、ログイン処理を実施する
 		} else {
 
 			// ユーザ有無フラグを取得
-			String userFlg = "";
+			String userId = "";
 			try {
 
-				userFlg = loginLogic(userName, password);
+				userId = loginLogic(userName, password);
 
 			} catch (SQLException e) {
 				// TODO 自動生成された catch ブロック
@@ -46,12 +46,12 @@ public class Login extends HttpServlet {
 			}
 
 			// ユーザ有無の判断
-			if ("1".equals(userFlg)) {
+			if (!"".equals(userId)) {
 
 				// sessionへユーザＩＤを設定する
 				// TODO
 				HttpSession session = request.getSession(true);
-		        session.setAttribute("userid", userName);
+				session.setAttribute("userid", userId);
 
 				// 既に登録済みの場合、FIND画面へ遷移
 				response.sendRedirect("/find.jsp");
@@ -67,8 +67,6 @@ public class Login extends HttpServlet {
 
 	public String loginLogic(String user, String pw) throws SQLException, ClassNotFoundException {
 
-		// 戻り値 "1" ユーザ登録済み
-		//        "2" ユーザ存在しない
 		String rtn = "";
 		String sql = "SELECT * FROM soul_login_t "
 				+ "where soul_login_mail = '" + user + "'"
@@ -78,14 +76,17 @@ public class Login extends HttpServlet {
 		ResultSet resultSet = DBConnection.getDBConnection().executeQuery(sql);
 
 		if (resultSet.next()) {
-			rtn = "1";
+			rtn = resultSet.getString("soul_userid");
 		} else {
-			rtn = "2";
+			// ユーザ存在しない場合、ブランクを返す
+			rtn = "";
 		}
 
 		resultSet.close();
 		DBConnection.dbConClose();
 
+		// 戻り値 ブランク以外 登録済みのユーザＩＤを返す
+		//        ブランク     ユーザ存在しない場合、ブランクを返す
 		return rtn;
 
 	}
